@@ -6,6 +6,7 @@ class Annotation(object):
         self.start_byte = start_byte
         self.end_byte = end_byte
         self.msg = msg
+        self.fgcolor = colored.fg("white")
         self.bgcolor = colored.bg(bgcolor)
 
     def __str__(self):
@@ -25,12 +26,12 @@ class Hexdump(object):
 
     @staticmethod
     def _find_overlap(a0, a1, b0, b1):
-        """ Find overlap between intervals (a0, a1) and (b0, b1)
+        """ Find overlap between intervals [a0, a1) and [b0, b1)
 
             Returns:
-                (m, n) the interval of overlap (or None)
+                [m, n) the interval of overlap (or None)
         """
-        if b0 > a1 or a0 > b1:
+        if b0 >= a1 or a0 >= b1:
             return None
         else:
             m = max(a0, b0)
@@ -54,16 +55,18 @@ class Hexdump(object):
             # Go through the annotations and see if there's overlap
             for annotation in self.annotations:
                 a0 = annotation.start_byte
-                a1 = annotation.end_byte - 1
+                a1 = annotation.end_byte
 
                 # Detect overlap and apply if there is
                 overlap = Hexdump._find_overlap(a0, a1, i, i+BLOCK_SIZE)
                 if overlap is None:
                     continue
                 (m, n) = overlap
+                m -= i
+                n -= i + 1
 
                 # Insert starting token
-                block[m] = annotation.bgcolor + block[m]
+                block[m] = annotation.fgcolor + annotation.bgcolor + block[m]
 
                 # Insert ending token
                 block[n] += colored.attr("reset")
@@ -83,7 +86,7 @@ class Hexdump(object):
                 if i >= len(annotation_lines):
                     annotation_lines.append("")
 
-            annotation_lines[i] = annotation.bgcolor + annotation.msg + colored.attr("reset")
+            annotation_lines[i] = annotation.fgcolor + annotation.bgcolor + annotation.msg + colored.attr("reset")
 
         # Create empty byte lines if we need
         while len(annotation_lines) > len(byte_lines):
