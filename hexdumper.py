@@ -227,13 +227,64 @@ def generate_annotations(data):
     for i in range(e_phnum):
         start = e_phoff + i * e_phentsize
         end = e_phoff + (i + 1) * e_phentsize
-        add_annotation(start, end, "Segment " + str(i))
+        type_i = data[start:start+4]
+        type_i = struct.unpack("<L", type_i)[0]
+        types = {
+                0x00000000: "PT_NULL",
+                0x00000001: "PT_LOAD",
+                0x00000002: "PT_DYNAMIC",
+                0x00000003: "PT_INTERP",
+                0x00000004: "PT_NOTE",
+                0x00000005: "PT_SHLIB",
+                0x00000006: "PT_PHDR",
+                0x00000007: "PT_TLS",
+                0x60000000: "PT_LOOS",
+                0x6FFFFFFF: "PT_HIOS",
+                0x70000000: "PT_LOPROC",
+                0x7FFFFFFF: "PT_HIPROC"
+        }
+        if type_i in types:
+            type_ = types[type_i]
+        else:
+            type_ = "UNKNOWN"
+
+        msg = "Segment {0:d} ({1})".format(i, type_)
+        add_annotation(start, end, msg)
 
     # //-------- SECTION HEADER --------------
     for i in range(e_shnum):
         start = e_shoff + i * e_shentsize
         end = e_shoff + (i + 1) * e_shentsize
-        add_annotation(start, end, "Section " + str(i))
+        type_i = data[start:start+4]
+        type_i = struct.unpack("<L", type_i)[0]
+        types = {
+                0x0: "SHT_NULL",
+                0x1: "SHT_PROGBITS",
+                0x2: "SHT_SYMTAB",
+                0x3: "SHT_STRTAB",
+                0x4: "SHT_RELA",
+                0x5: "SHT_HASH",
+                0x6: "SHT_DYNAMIC",
+                0x7: "SHT_NOTE",
+                0x8: "SHT_NOBITS",
+                0x9: "SHT_REL",
+                0x0A: "SHT_SHLIB",
+                0x0B: "SHT_DYNSYM",
+                0x0E: "SHT_INIT_ARRAY",
+                0x0F: "SHT_FINI_ARRAY",
+                0x10: "SHT_PREINIT_ARRAY",
+                0x11: "SHT_GROUP",
+                0x12: "SHT_SYMTAB_SHNDX",
+                0x13: "SHT_NUM",
+        }
+        if type_i in types:
+            type_ = types[type_i]
+        else:
+            type_ = "UNKNOWN"
+
+        msg = "Section {0:d} ({1})".format(i, type_)
+
+        add_annotation(start, end, msg)
 
 
 
